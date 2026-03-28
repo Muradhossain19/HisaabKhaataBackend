@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-HisaabKhaata
+    environment:
+      MYSQL_ROOT_PASSWORD: HisaabKhaata@1234
+      MYSQL_DATABASE: HisaabKhaata
+      MYSQL_USER: HisaabKhaata
+      MYSQL_PASSWORD: HisaabKhaata@1234
+    ports:
+      - "3313:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
+    container_name: HisaabKhaata_phpmyadmin
+    environment:
+      PMA_HOST: mysql-HisaabKhaata
+    ports:
+      - "8088:80"
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    name: HisaabKhaata_network
+    driver: bridge
+
+volumes:
+  db-data:
