@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\PartyController;
+use App\Http\Controllers\Api\PartyLedgerController;
 
 // পাবলিক রুট (লগইন/রেজিস্ট্রেশনের জন্য)
 Route::post('/register', [AuthController::class, 'register']);
@@ -44,4 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Uploads
     Route::post('/uploads', [UploadController::class, 'store']);
+
+    // Parties (Dena/Pawna)
+    Route::get('/parties', [PartyController::class, 'index']);
+    Route::post('/parties', [PartyController::class, 'store']);
+    Route::put('/parties/{party}', [PartyController::class, 'update']);
+    Route::delete('/parties/{party}', [PartyController::class, 'destroy']);
+
+    Route::get('/parties/{party}/ledger', [PartyLedgerController::class, 'index']);
+    Route::post('/parties/{party}/ledger', [PartyLedgerController::class, 'store']);
 });

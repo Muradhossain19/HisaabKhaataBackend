@@ -12,6 +12,12 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $query = Transaction::query();
+        $user = $request->user();
+        if ($user) {
+            $query->where(function ($q) use ($user) {
+                $q->whereNull('user_id')->orWhere('user_id', $user->id);
+            });
+        }
         if ($request->filled('from')) {
             $query->where('date', '>=', $request->input('from'));
         }
@@ -37,6 +43,8 @@ class TransactionController extends Controller
         ]);
 
         $data['is_synced'] = true;
+        $user = $request->user();
+        if ($user) $data['user_id'] = $user->id;
         $t = Transaction::create($data);
         return response()->json($t, 201);
     }
@@ -45,12 +53,14 @@ class TransactionController extends Controller
     {
         $payload = $request->validate(['transactions' => 'required|array']);
         $results = [];
+        $user = $request->user();
 
         DB::beginTransaction();
         try {
             foreach ($payload['transactions'] as $item) {
                 $clientId = $item['client_id'] ?? null;
                 $data = [
+                    'user_id' => $user ? $user->id : null,
                     'client_id' => $clientId,
                     'type' => $item['type'] ?? 'expense',
                     'amount' => $item['amount'] ?? 0,
@@ -76,11 +86,19 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
+        $user = request()->user();
+        if ($user && $transaction->user_id && $transaction->user_id !== $user->id) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
         return response()->json($transaction);
     }
 
     public function update(Request $request, Transaction $transaction)
     {
+        $user = $request->user();
+        if ($user && $transaction->user_id && $transaction->user_id !== $user->id) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
         $data = $request->validate([
             'type' => 'in:income,expense',
             'amount' => 'numeric',
@@ -97,6 +115,10 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $transaction)
     {
+        $user = request()->user();
+        if ($user && $transaction->user_id && $transaction->user_id !== $user->id) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
         $transaction->delete();
         return response()->json(null, 204);
     }
